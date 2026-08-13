@@ -37,7 +37,33 @@ class Vector2 {
     }
 }
 
-// Объект пула для переиспользования объектов
+// Изометрическая проекция
+class IsometricUtils {
+    static worldToScreen(x, y, z = 0) {
+        const angle = CONFIG.ISOMETRIC_ANGLE;
+        const tileSize = CONFIG.TILE_SIZE;
+        
+        const screenX = (x - y) * Math.cos(angle) * tileSize;
+        const screenY = (x + y) * Math.sin(angle) * tileSize - z * 10;
+        
+        return { x: screenX, y: screenY };
+    }
+    
+    static screenToWorld(screenX, screenY, z = 0) {
+        const angle = CONFIG.ISOMETRIC_ANGLE;
+        const tileSize = CONFIG.TILE_SIZE;
+        
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        
+        const x = (screenX / (cos * tileSize) + screenY / (sin * tileSize)) / 2;
+        const y = (screenY / (sin * tileSize) - screenX / (cos * tileSize)) / 2;
+        
+        return { x: Math.round(x), y: Math.round(y) };
+    }
+}
+
+// Object pool для оптимизации
 class ObjectPool {
     constructor(createFn, resetFn, initialSize = 100) {
         this.createFn = createFn;
@@ -76,7 +102,64 @@ class ObjectPool {
     }
 }
 
-// Легкая система звука (заглушка для начала)
+// Частица
+class Particle {
+    constructor() {
+        this.x = 0;
+        this.y = 0;
+        this.vx = 0;
+        this.vy = 0;
+        this.life = 0;
+        this.maxLife = 0;
+        this.size = 0;
+        this.color = '';
+        this.active = false;
+    }
+    
+    spawn(x, y, vx, vy, color, life = CONFIG.PARTICLE_LIFETIME) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.maxLife = life;
+        this.life = life;
+        this.size = 4 + Math.random() * 8;
+        this.active = true;
+    }
+    
+    update(dt) {
+        if (!this.active) return;
+        
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.vy += 200 * dt;
+        this.life -= dt * 1000;
+        
+        if (this.life <= 0) {
+            this.active = false;
+        }
+    }
+    
+    draw(ctx) {
+        if (!this.active) return;
+        
+        const alpha = this.life / this.maxLife;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+    
+    reset() {
+        this.active = false;
+    }
+}
+
+// Audio заглушка
 class AudioManager {
     constructor() {
         this.enabled = true;
@@ -84,12 +167,17 @@ class AudioManager {
     
     playSound(name) {
         if (!this.enabled) return;
-        // TODO: Добавить звуки позже
-        console.log(`Sound: ${name}`);
+        // TODO: Добавить звуки
     }
 }
 
-// Формат времени
+// Форматирование
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return Math.floor(num).toString();
+}
+
 function formatTime(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
@@ -97,64 +185,27 @@ function formatTime(ms) {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-// Форматирование чисел
-function formatNumber(num) {
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'M';
-    }
-    if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'K';
-    }
-    return Math.floor(num).toString();
+// Случайные функции
+function random(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
-// Линейная интерполяция
+function randomInt(min, max) {
+    return Math.floor(random(min, max + 1));
+}
+
+function randomChoice(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// Интерполяция
 function lerp(start, end, t) {
     return start + (end - start) * t;
 }
 
-// Easing функции
 const Easing = {
     easeInQuad: (t) => t * t,
     easeOutQuad: (t) => t * (2 - t),
     easeInOutQuad: (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
     easeOutCubic: (t) => 1 + (--t) * t * t,
 };
-
-// Случайное число в диапазоне
-function random(min, max) {
-    return Math.random() * (max - min) + min;
-}
-
-// Случайное целое число
-function randomInt(min, max) {
-    return Math.floor(random(min, max + 1));
-}
-
-// Случайный элемент из массива
-function randomChoice(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-}
-
-// Проверка коллизии между двумя квадратами
-function isPointInRect(px, py, rx, ry, rw, rh) {
-    return px >= rx && px <= rx + rw && py >= ry && py <= ry + rh;
-}
-
-function isCircleInRect(cx, cy, cr, rx, ry, rw, rh) {
-    const closestX = Math.max(rx, Math.min(cx, rx + rw));
-    const closestY = Math.max(ry, Math.min(cy, ry + rh));
-    const dx = cx - closestX;
-    const dy = cy - closestY;
-    return (dx * dx + dy * dy) < (cr * cr);
-}
-
-// Сообщения Квадратикуса в конце игры
-const QUADRATIKUS_MESSAGES = [
-    '✨ Вы нашли свой путь! Спасибо, что играли со мной!',
-    '🌟 Отлично! Вы показали отличные способности!',
-    '🎯 Поздравляю! Вы прошли путь очень быстро!',
-    '💡 Интересно! Вы выбрали разные направления развития.',
-    '🚀 Вперёд! Я верю в вас!',
-    '👏 Спасибо за игру! Удачи в выборе профессии!',
-];
