@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квадратикус: Фабрика Путей</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Экран сплеша -->
+    <div id="splashScreen" class="screen screen-active">
+        <div class="splash-container">
+            <div class="splash-logo">🟦</div>
+            <h1>Квадратикус</h1>
+            <h2>Фабрика Путей</h2>
+            <p class="splash-description">
+                Помоги Квадратикусу собрать интересы, превратить их в навыки и найти свой путь!
+            </p>
+            <button id="startButton" class="btn-large btn-primary">Начать путь</button>
+        </div>
+    </div>
+
+    <!-- Игровой экран -->
+    <div id="gameScreen" class="screen">
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-overlay">
+            <div class="top-bar">
+                <div class="stat">
+                    <span class="stat-label">Очки Пути</span>
+                    <span id="pathPoints" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Монеты</span>
+                    <span id="coins" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Время</span>
+                    <span id="timer" class="stat-value">15:00</span>
+                </div>
+            </div>
+            <div id="upgradePanelContainer" class="upgrade-panel-container">
+                <div id="upgradePanel" class="upgrade-panel"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран результатов -->
+    <div id="resultScreen" class="screen">
+        <div class="result-container">
+            <h1>Твой путь завершен!</h1>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <span class="result-label">Итоговые Очки Пути</span>
+                    <span id="finalPathPoints" class="result-value">0</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">Собрано интересов</span>
+                    <span id="finalInterests" class="result-value">0</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">Монет заработано</span>
+                    <span id="finalCoins" class="result-value">0</span>
+                </div>
+            </div>
+            <p id="quadratikusMessage" class="quadratikus-message"></p>
+            <button id="restartButton" class="btn-large btn-primary">Пройти путь ещё раз</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>
