@@ -1,123 +1,199 @@
 // ========================================
-// КОНФИГУРАЦИЯ ИГРЫ
+// КОНФИГУРАЦИЯ ИГРЫ - Квадратикус: Пекарня Пути
 // ========================================
 
 const CONFIG = {
-    // Время игры
+    // Время и сессия
     SESSION_DURATION_MS: 15 * 60 * 1000, // 15 минут
     
-    // Интересы (квадратики)
-    INTEREST_SPAWN_INTERVAL: 1500, // Интервал спавна (мс)
-    INTEREST_SIZE: 30,
-    INTEREST_SPAWN_COUNT: 1, // Количество за раз
-    INTEREST_COLORS: [
-        '#FFD93D', // Жёлтый - Любопытство
-        '#6BCB77', // Зелёный - Забота
-        '#FF6B9D', // Розовый - Творчество
-        '#4D96FF', // Синий - Логика
-        '#FF8C42', // Оранжевый - Руки
-        '#9D84B7'  // Фиолетовый - Идеи
-    ],
-    INTEREST_NAMES: ['Любопытство', 'Забота', 'Творчество', 'Логика', 'Руки', 'Идеи'],
+    // 2.5D Изометрия
+    ISOMETRIC_ANGLE: Math.PI / 6, // 30 градусов
+    TILE_SIZE: 40,
     
-    // Станки
-    MACHINE_1_PROCESS_TIME: 2000, // Мастерская навыков (мс)
-    MACHINE_2_PROCESS_TIME: 2500, // Комбинатор направлений (мс)
-    MACHINE_CAPACITY: 10, // Макс кол-во в очереди
+    // Квадратикус
+    QUADRATIKUS_SIZE: 50,
+    QUADRATIKUS_ANIMATION_SPEED: 1.5,
+    
+    // Ферма - параметры
+    FARM_COLS: 6,
+    FARM_ROWS: 4,
+    WHEAT_GROWTH_STAGES: 4, // Стадии роста пшеницы
+    WHEAT_GROWTH_TIME: 8000, // 8 сек до созревания
+    WHEAT_HARVEST_VALUE: 5,
+    TRACTOR_SPEED: 1.5,
+    WORKER_SPEED: 1,
+    
+    // Пекарня
+    BAKERY_MACHINES: 1, // Начальное кол-во печей
+    MILLING_TIME: 3000, // Размол пшеницы
+    DOUGH_TIME: 2500, // Замес теста
+    BAKING_TIME: 4000, // Выпечка
+    BREAD_VALUE: 25,
+    
+    // Магазин
+    SHOP_CUSTOMER_INTERVAL: 2500, // Интервал появления клиентов
+    CUSTOMER_BUY_TIME: 1500, // Время покупки
+    BREAD_SELL_PRICE: 100,
+    QUEUE_MAX: 8,
     
     // Экономика
-    BASE_COINS_REWARD: 10,
-    BASE_PATH_POINTS_REWARD: 50,
+    STARTING_MONEY: 200,
     
-    // Апгрейды
-    UPGRADES_INITIAL_COST: 50,
-    UPGRADES_COST_MULTIPLIER: 1.15,
-    
-    // Canvas
-    QUADRATIKUS_SIZE: 60,
-    PARTICLE_LIFETIME: 800,
-    PARTICLE_COUNT_MAX: 30,
-    
-    // Прогрессия времени
-    PROGRESSION_STAGES: [
-        { time: 0, label: 'Начало', interestSpawnInterval: 1500, machine1Time: 2000, machine2Time: 2500 },
-        { time: 120000, label: 'Ускорение', interestSpawnInterval: 1200, machine1Time: 1800, machine2Time: 2200 },
-        { time: 300000, label: 'Разгон', interestSpawnInterval: 900, machine1Time: 1500, machine2Time: 2000 },
-        { time: 540000, label: 'Ураган', interestSpawnInterval: 600, machine1Time: 1000, machine2Time: 1500 },
-    ],
+    // Частицы
+    PARTICLE_LIFETIME: 1000,
+    PARTICLE_COUNT_MAX: 80,
     
     // UI
-    TOP_BAR_HEIGHT: 60,
-    UPGRADE_PANEL_HEIGHT: 80,
+    TOP_BAR_HEIGHT: 70,
+    ROOM_TABS_HEIGHT: 80,
+    
+    // Цвета
+    WHEAT_COLOR: '#D4AF37',
+    FLOUR_COLOR: '#F5DEB3',
+    DOUGH_COLOR: '#D2A679',
+    BREAD_COLOR: '#8B4513',
+    CUSTOMER_COLOR: '#6BCB77',
 };
 
-// Типы апгрейдов
+// Типы улучшений
 const UPGRADE_TYPES = {
-    SPAWN_SPEED: 'spawn_speed',
-    SPAWN_COUNT: 'spawn_count',
-    MACHINE_SPEED: 'machine_speed',
-    AUTO_COLLECT: 'auto_collect',
-    COINS_MULTIPLIER: 'coins_multiplier',
-    POINTS_MULTIPLIER: 'points_multiplier',
-    NEW_COLOR: 'new_color',
-    MACHINE_CAPACITY: 'machine_capacity',
-    COMBO_BOOST: 'combo_boost',
+    // Ферма
+    FARM_EXPAND: 'farm_expand',
+    TRACTOR: 'tractor',
+    WORKER: 'worker',
+    GROWTH_SPEED: 'growth_speed',
+    AUTO_HARVEST: 'auto_harvest',
+    
+    // Пекарня
+    BAKERY_MACHINE: 'bakery_machine',
+    BAKING_SPEED: 'baking_speed',
+    BAKER: 'baker',
+    CONVEYOR: 'conveyor',
+    
+    // Магазин
+    SHOP_CASHIER: 'shop_cashier',
+    SHOP_UPGRADE: 'shop_upgrade',
+    ADVERTISING: 'advertising',
+    AUTO_SELL: 'auto_sell',
 };
 
-// Система апгрейдов
+// Список улучшений с ценами и эффектами
 const UPGRADES = [
+    // === Ф��РМА ===
     {
-        id: 'spawn_speed_1',
-        type: UPGRADE_TYPES.SPAWN_SPEED,
-        name: '⚡ Быстрее собир��ть',
-        description: '-20% время появления',
-        cost: 50,
-        effect: { multiplier: 0.8 },
-        maxLevel: 5,
-    },
-    {
-        id: 'spawn_count_1',
-        type: UPGRADE_TYPES.SPAWN_COUNT,
-        name: '➕ Больше интересов',
-        description: '+1 интерес за раз',
-        cost: 80,
-        effect: { add: 1 },
-        maxLevel: 4,
-    },
-    {
-        id: 'machine_speed_1',
-        type: UPGRADE_TYPES.MACHINE_SPEED,
-        name: '🏭 Ускорить станки',
-        description: '-15% время обработки',
-        cost: 100,
-        effect: { multiplier: 0.85 },
-        maxLevel: 4,
-    },
-    {
-        id: 'coins_multiplier_1',
-        type: UPGRADE_TYPES.COINS_MULTIPLIER,
-        name: '💰 Больше монет',
-        description: '+25% вознаграждение',
+        id: 'farm_expand',
+        type: UPGRADE_TYPES.FARM_EXPAND,
+        name: '🌾 Расширить поле',
+        description: '+2 грядки',
         cost: 150,
-        effect: { multiplier: 1.25 },
-        maxLevel: 5,
+        room: 'farm',
+        icon: '🌾',
+        maxLevel: 3,
     },
     {
-        id: 'points_multiplier_1',
-        type: UPGRADE_TYPES.POINTS_MULTIPLIER,
-        name: '🎯 Больше очков',
-        description: '+30% очков пути',
-        cost: 150,
-        effect: { multiplier: 1.3 },
-        maxLevel: 5,
-    },
-    {
-        id: 'combo_boost_1',
-        type: UPGRADE_TYPES.COMBO_BOOST,
-        name: '🔥 Комбо бонус',
-        description: 'Быстрый клик = +100%',
+        id: 'tractor',
+        type: UPGRADE_TYPES.TRACTOR,
+        name: '🚜 Второй трактор',
+        description: 'Автосбор',
         cost: 200,
-        effect: { enabled: true },
-        maxLevel: 1,
+        room: 'farm',
+        icon: '🚜',
+        maxLevel: 2,
     },
+    {
+        id: 'farm_worker',
+        type: UPGRADE_TYPES.WORKER,
+        name: '👷 Рабочий',
+        description: '+1 сборщик',
+        cost: 100,
+        room: 'farm',
+        icon: '👷',
+        maxLevel: 4,
+    },
+    {
+        id: 'growth_speed',
+        type: UPGRADE_TYPES.GROWTH_SPEED,
+        name: '⚡ Ускорить рост',
+        description: '-30% время',
+        cost: 120,
+        room: 'farm',
+        icon: '⚡',
+        maxLevel: 5,
+    },
+    
+    // === ПЕКАРНЯ ===
+    {
+        id: 'bakery_machine',
+        type: UPGRADE_TYPES.BAKERY_MACHINE,
+        name: '🔥 Новая печь',
+        description: '+1 печь',
+        cost: 250,
+        room: 'bakery',
+        icon: '🔥',
+        maxLevel: 3,
+    },
+    {
+        id: 'baking_speed',
+        type: UPGRADE_TYPES.BAKING_SPEED,
+        name: '⏱ Ускорить печь',
+        description: '-25% время',
+        cost: 150,
+        room: 'bakery',
+        icon: '⏱',
+        maxLevel: 5,
+    },
+    {
+        id: 'bakery_worker',
+        type: UPGRADE_TYPES.BAKER,
+        name: '👨‍🍳 Пекарь',
+        description: '+1 работник',
+        cost: 120,
+        room: 'bakery',
+        icon: '👨‍🍳',
+        maxLevel: 4,
+    },
+    
+    // === МАГАЗИН ===
+    {
+        id: 'shop_cashier',
+        type: UPGRADE_TYPES.SHOP_CASHIER,
+        name: '💳 Вторая касса',
+        description: '+1 касса',
+        cost: 200,
+        room: 'shop',
+        icon: '💳',
+        maxLevel: 2,
+    },
+    {
+        id: 'advertising',
+        type: UPGRADE_TYPES.ADVERTISING,
+        name: '📢 Реклама',
+        description: '+50% клиентов',
+        cost: 250,
+        room: 'shop',
+        icon: '📢',
+        maxLevel: 3,
+    },
+    {
+        id: 'shop_upgrade',
+        type: UPGRADE_TYPES.SHOP_UPGRADE,
+        name: '✨ Улучшить витрину',
+        description: '+30% цена',
+        cost: 180,
+        room: 'shop',
+        icon: '✨',
+        maxLevel: 4,
+    },
+];
+
+// Сообщения Квадратикуса
+const QUADRATIKUS_MESSAGES = [
+    '🎉 Какая восхитительная пекарня получилась!',
+    '😋 Хлеб пахнет божественно! Я горжусь!',
+    '💰 Деньги текут рекой! Отлично работали!',
+    '🌟 Мы стали лучшей пекарней в городе!',
+    '👏 Спасибо за помощь! Без тебя не получилось бы!',
+    '🚀 Готов к новым вершинам успеха!',
+    '🏆 Это был волшебный день! Спасибо!',
+    '✨ Мечта сбылась! Наша пекарня - лучшая!',
 ];
